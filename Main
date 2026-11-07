@@ -7,8 +7,8 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
-local MOBILE_URL = "https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/mobile.lua"
-local PC_URL     = "https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/pc.lua"
+local MOBILE_URL = "https://github.com/doki-jackpot/North_./blob/main/MobileLoading"
+local PC_URL     = "https://github.com/doki-jackpot/North_./blob/main/PCLoading"
 
 local player = Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
