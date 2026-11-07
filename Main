@@ -1,0 +1,145 @@
+--[[
+    North_ — Platform Bootstrap (Mobile/PC)
+    Roblox Lua | LocalScript
+]]
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local MOBILE_URL = "https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/mobile.lua"
+local PC_URL     = "https://raw.githubusercontent.com/SEU_USUARIO/SEU_REPO/main/pc.lua"
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "North_"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local bg = Instance.new("Frame")
+bg.Size = UDim2.new(1, 0, 1, 0)
+bg.Position = UDim2.new(0, 0, 0, 0)
+bg.BackgroundColor3 = Color3.fromRGB(6, 6, 8)
+bg.BorderSizePixel = 0
+bg.Parent = gui
+
+local skull = Instance.new("TextLabel")
+skull.Size = UDim2.new(1, 0, 0, 120)
+skull.Position = UDim2.new(0, 0, 0.35, -60)
+skull.BackgroundTransparency = 1
+skull.Text = "☠"
+skull.TextColor3 = Color3.fromRGB(235, 238, 245)
+skull.Font = Enum.Font.GothamBold
+skull.TextSize = 96
+skull.Parent = bg
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.Position = UDim2.new(0, 0, 0.5, 0)
+title.BackgroundTransparency = 1
+title.Text = "North_"
+title.TextColor3 = Color3.fromRGB(240, 242, 250)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 32
+title.Parent = bg
+
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, 0, 0, 24)
+status.Position = UDim2.new(0, 0, 0.5, 44)
+status.BackgroundTransparency = 1
+status.Text = "Detecting platform..."
+status.TextColor3 = Color3.fromRGB(140, 145, 160)
+status.Font = Enum.Font.Gotham
+status.TextSize = 14
+status.Parent = bg
+
+local barBg = Instance.new("Frame")
+barBg.Size = UDim2.new(0, 260, 0, 6)
+barBg.Position = UDim2.new(0.5, -130, 0.5, 78)
+barBg.BackgroundColor3 = Color3.fromRGB(22, 24, 30)
+barBg.BorderSizePixel = 0
+barBg.Parent = bg
+Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
+
+local bar = Instance.new("Frame")
+bar.Size = UDim2.new(0, 0, 1, 0)
+bar.BackgroundColor3 = Color3.fromRGB(200, 30, 45)
+bar.BorderSizePixel = 0
+bar.Parent = barBg
+Instance.new("UICorner", bar).CornerRadius = UDim.new(1, 0)
+
+local function setProgress(p, txt)
+    TweenService:Create(bar, TweenInfo.new(0.3), {Size = UDim2.new(p, 0, 1, 0)}):Play()
+    status.Text = txt
+end
+
+local function isMobile()
+    return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+end
+
+local function fetch(url)
+    -- Try game:HttpGet first (most executors support)
+    local ok, res = pcall(function() return game:HttpGet(url) end)
+    if ok and type(res) == "string" and #res > 0 then
+        return res
+    end
+    -- Fallback to request APIs
+    local req = request or http_request or syn_request or (http and http.request)
+    if req then
+        local ok2, r = pcall(function() return req({Url = url, Method = "GET"}) end)
+        if ok2 and type(r) == "table" and r.StatusCode == 200 and r.Body then
+            return r.Body
+        end
+    end
+    return nil, tostring(res or "fetch failed")
+end
+
+task.spawn(function()
+    setProgress(0.15, "Detecting platform...")
+    task.wait(0.4)
+
+    local mobile = isMobile()
+    local platform = mobile and "Mobile" or "PC"
+    setProgress(0.35, "Platform: " .. platform)
+    task.wait(0.4)
+
+    local url = mobile and MOBILE_URL or PC_URL
+    setProgress(0.55, "Fetching " .. platform .. " script...")
+    local code, err = fetch(url)
+    if not code then
+        setProgress(1, "Fetch error: " .. tostring(err))
+        warn("Fetch error:", err)
+        task.wait(4)
+        gui:Destroy()
+        return
+    end
+
+    setProgress(0.85, "Compiling...")
+    task.wait(0.3)
+    local fn, compileErr = loadstring(code)
+    if not fn then
+        setProgress(1, "Compile error")
+        warn(compileErr)
+        task.wait(4)
+        gui:Destroy()
+        return
+    end
+
+    setProgress(1, "Launching North_...")
+    task.wait(0.4)
+    TweenService:Create(bg, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    for _, v in ipairs(bg:GetDescendants()) do
+        if v:IsA("TextLabel") or v:IsA("Frame") then
+            TweenService:Create(v, TweenInfo.new(0.4), {BackgroundTransparency = 1, TextTransparency = 1}):Play()
+        end
+    end
+    task.wait(0.45)
+    gui:Destroy()
+
+    local ok, runErr = pcall(fn)
+    if not ok then
+        warn("Runtime error: " .. tostring(runErr))
+    end
+end)
